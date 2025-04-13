@@ -1,0 +1,20 @@
+services:
+  mongodb:
+    image: mongo:7-jammy
+
+    container_name: mongodb
+
+    ports:
+      - "27007:27017" # Port on my device : Port number on the ontainer
+
+    volumes:
+      - ./mongodb:/data/db # Create a volume to persist data
+      
+    networks:
+      - backend # Network name
+
+    restart: always # Restart the container if it failed or stops
+
+networks: # expose the network to the host machine
+  backend:
+    
