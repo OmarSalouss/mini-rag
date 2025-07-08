@@ -37,7 +37,7 @@ class ProjectModel(BaseDataModel):
         result = await self.collection.insert_one(project.dict(by_alias=True, exclude_unset=True))
         # by_alias=True means use the alias name in the model, not the field name
         # exclude_unset=True means exclude the unset fields in the model
-        project._id = result.inserted_id
+        project.id = result.inserted_id
 
         return project # return the Project object with the new _id
     

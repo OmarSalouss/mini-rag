@@ -9,7 +9,10 @@ import logging
 from .schemes.data import ProcessRequest
 from models.ProjectModel import ProjectModel
 from models.ChunkModel import ChunkModel
-from models.db_schemes import DataChunk
+from models.AssetModel import AssetModel
+from models.db_schemes import DataChunk, Asset
+from models.enums.AssetTypeEnum import AssetTypeEnum
+from bson import ObjectId
 
 logger = logging.getLogger('unicorn.error')
 
@@ -63,11 +66,23 @@ async def upload_data(request: Request, project_id: str, file: UploadFile,
             }
         )
 
+    asset_model = await AssetModel.create_instance(
+        db_client=request.app.db_client
+    )
+
+    asset_resourse = Asset(
+        asset_project_id=project.id,
+        asset_type=AssetTypeEnum.FILE.value,
+        asset_name=file_id,
+        asset_size=os.path.getsize(filename=file_path)
+    )
+
+    asset_record = await asset_model.create_asset(asset=asset_resourse)
+
     return JSONResponse(
             content={
                 "signal": ResponseSignal.FILE_UPLOAD_SUCCESS.value,
-                "file_id": file_id,
-                # "project_id": str(project.id) # convert ObjectId to string, because Python cannot understand ObjectId
+                "file_id": str(asset_record.id),
             }
         )
 
