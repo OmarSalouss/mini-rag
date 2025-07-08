@@ -10,6 +10,28 @@ class ChunkModel(BaseDataModel):
         super().__init__(db_client=db_client)
         self.collection = self.db_client[DataBaseEnum.COLLECTION_CHUNK_NAME.value]
 
+    @classmethod 
+    async def create_instance(cls, db_client: object):
+        """
+        # Simialr to ProjectModel, we create this static method because we **can't** use await and change the __init__ method to async
+        """
+        instance = cls(db_client=db_client)
+        await instance.init_collection()
+        return instance
+    
+    # Create indexes for the collection at first time
+    async def init_collection(self):
+        all_collections = await self.db_client.list_collection_names()
+        if DataBaseEnum.COLLECTION_CHUNK_NAME.value not in all_collections:
+            self.collection = self.db_client[DataBaseEnum.COLLECTION_CHUNK_NAME.value]
+            indexes = DataChunk.get_indexes()
+            for index in indexes:
+                await self.collection.create_index(
+                    index["key"],
+                    name=index["name"],
+                    unique=index["unique"]
+                )
+        
     async def create_chunk(self, chunk: DataChunk):
         result = await self.collection.insert_one(chunk.dict(by_alias=True, exclude_unset=True))
         # by_alias=True means use the alias name in the model, not the field name

@@ -5,11 +5,16 @@ services:
     container_name: mongodb
 
     ports:
-      - "27007:27017" # Port on my device : Port number on the ontainer
+      - "27007:27017" # Port on my device : Port number on the container
 
     volumes:
-      - ./mongodb:/data/db # Create a volume to persist data
+      - mongodata:/data/db # Create a volume to persist data
+      # I remove `./` from `./mongodb` to avoid using a local directory and to ensure data is stored in a Docker-managed volume to avoid any conflicts caused by local file system issues
+      #! In general, the docker will be resposible on creating the directory and managing the data
       
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME} # Environment variables for MongoDB
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD} # Environment variables for MongoDB
     networks:
       - backend # Network name
 
@@ -17,4 +22,7 @@ services:
 
 networks: # expose the network to the host machine
   backend:
+
+volumes:
+  mongodata: # Here will create a volume named `mongodata` to persist MongoDB data in the above mongodb service
     
