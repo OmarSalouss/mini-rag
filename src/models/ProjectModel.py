@@ -4,9 +4,33 @@ from .enums.DataBaseEnum import DataBaseEnum
 
 class ProjectModel(BaseDataModel):
 
-    def __init__(self, db_client):
+    def __init__(self, db_client: object):
         super().__init__(db_client=db_client)
         self.collection = self.db_client[DataBaseEnum.COLLECTION_PROJECT_NAME.value]
+
+    @classmethod 
+    async def create_instance(cls, db_client: object):
+        """
+        # we create this static method because we **can't** use await and change the __init__ method to async
+        # so we use a class method to create an instance of the class in addition to initializing the
+        # collection and creating indexes if not exists
+        """
+        instance = cls(db_client=db_client) # cls is the class itself, and takes the db_client as an argument to the constructor __init__ so that it can be used to connect to the database
+        await instance.init_collection() # initialize the collection and create indexes if not exists
+        return instance
+
+    # Create indexes for the collection at first time
+    async def init_collection(self):
+        all_collections = await self.db_client.list_collection_names()
+        if DataBaseEnum.COLLECTION_PROJECT_NAME.value not in all_collections:
+            self.collection = self.db_client[DataBaseEnum.COLLECTION_PROJECT_NAME.value]
+            indexes = Project.get_indexes()
+            for index in indexes:
+                await self.collection.create_index(
+                    index["key"],
+                    name=index["name"],
+                    unique=index["unique"]
+                )
 
     async def create_project(self, project: Project):
 
